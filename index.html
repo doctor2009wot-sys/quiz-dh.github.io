@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Democracia & Sociedade</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0c10;
+    --surface: #13141a;
+    --surface2: #1c1e28;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --cream: #f0e6cc;
+    --red: #c0392b;
+    --green: #1abc9c;
+    --text: #ddd6c8;
+    --muted: #7a7569;
+    --border: #2a2c38;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Decorative background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 10%, rgba(201,168,76,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 60% at 80% 90%, rgba(26,188,156,0.05) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .columns-bg {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 0.03;
+  }
+  .columns-bg svg { width: 100%; height: 100%; }
+
+  .container {
+    width: 100%;
+    max-width: 760px;
+    padding: 2rem 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; animation: fadeUp .5s ease forwards; }
+  .screen.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── HEADER BADGE ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: rgba(201,168,76,.12);
+    border: 1px solid rgba(201,168,76,.3);
+    color: var(--gold);
+    font-size: .72rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: .35rem .9rem;
+    border-radius: 99px;
+    margin-bottom: 2rem;
+  }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* ── HOME ── */
+  .home-header { text-align: center; margin-bottom: 3rem; }
+  .laurel { font-size: 2.8rem; line-height: 1; color: var(--gold); margin-bottom: 1rem; letter-spacing: -.02em; }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 6vw, 3.8rem);
+    font-weight: 900;
+    line-height: 1.05;
+    color: var(--cream);
+  }
+  h1 span { color: var(--gold); }
+  .subtitle {
+    margin-top: 1rem;
+    font-size: 1rem;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.6;
+    max-width: 480px;
+    margin-inline: auto;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 2rem 0;
+  }
+
+  .stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 2.5rem;
+    margin-bottom: 2.5rem;
+  }
+  .stat { text-align: center; }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .stat-label { font-size: .75rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+
+  .btn-primary {
+    display: block;
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: #0b0c10;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: .04em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    text-transform: uppercase;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(201,168,76,.35);
+  }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* ── QUIZ ── */
+  .quiz-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+  .q-counter {
+    font-size: .8rem;
+    color: var(--muted);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .q-counter strong { color: var(--gold); font-size: 1.1rem; }
+  .timer-wrap {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: .3rem .8rem;
+    border-radius: 99px;
+    font-size: .85rem;
+  }
+  .timer-icon { font-size: 1rem; }
+  #timer { font-weight: 700; color: var(--cream); min-width: 24px; }
+  #timer.warn { color: #e74c3c; }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 99px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 99px;
+    transition: width .4s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem 2rem 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+
+  .category-tag {
+    display: inline-block;
+    background: rgba(201,168,76,.1);
+    color: var(--gold);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: .25rem .7rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .question-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.05rem, 2.5vw, 1.3rem);
+    font-weight: 700;
+    color: var(--cream);
+    line-height: 1.5;
+  }
+
+  /* Options */
+  .options { display: grid; gap: .75rem; }
+
+  .option-btn {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .95rem;
+    padding: .9rem 1.2rem;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color .2s, background .2s, transform .15s;
+    width: 100%;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--gold);
+    background: rgba(201,168,76,.07);
+    transform: translateX(4px);
+  }
+  .option-btn:disabled { cursor: default; }
+  .option-btn.correct {
+    border-color: var(--green);
+    background: rgba(26,188,156,.1);
+    color: #a8f0e0;
+  }
+  .option-btn.wrong {
+    border-color: var(--red);
+    background: rgba(192,57,43,.1);
+    color: #f5a49e;
+  }
+  .option-letter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: var(--border);
+    font-size: .8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    transition: background .2s;
+  }
+  .option-btn.correct .option-letter { background: var(--green); color: #fff; }
+  .option-btn.wrong   .option-letter { background: var(--red);   color: #fff; }
+
+  /* Feedback */
+  .feedback-box {
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    font-size: .9rem;
+    line-height: 1.55;
+    display: none;
+    margin-top: 1rem;
+    border-left: 3px solid;
+  }
+  .feedback-box.show { display: block; animation: fadeUp .3s ease; }
+  .feedback-box.correct-fb { background: rgba(26,188,156,.08); border-color: var(--green); color: #a8f0e0; }
+  .feedback-box.wrong-fb   { background: rgba(192,57,43,.08);  border-color: var(--red);   color: #f5a49e; }
+  .fb-title { font-weight: 700; margin-bottom: .25rem; display: flex; align-items: center; gap: .4rem; }
+
+  .btn-next {
+    display: block;
+    width: 100%;
+    padding: .85rem;
+    background: transparent;
+    border: 1.5px solid var(--gold);
+    color: var(--gold);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: .95rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    display: none;
+  }
+  .btn-next.show { display: block; animation: fadeUp .3s ease; }
+  .btn-next:hover { background: var(--gold); color: #0b0c10; }
+
+  /* ── RESULT ── */
+  .result-center { text-align: center; }
+  .trophy {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: bounceIn .6s cubic-bezier(.36,.07,.19,.97);
+  }
+  @keyframes bounceIn {
+    0%   { transform: scale(.3); opacity: 0; }
+    60%  { transform: scale(1.12); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .result-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 900;
+    color: var(--cream);
+    margin-bottom: .5rem;
+  }
+  .result-sub { color: var(--muted); font-size: 1rem; margin-bottom: 2rem; }
+
+  .score-ring-wrap { display: flex; justify-content: center; margin: 2rem 0; }
+  .score-ring { position: relative; width: 140px; height: 140px; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring circle { fill: none; stroke-width: 10; }
+  .ring-bg   { stroke: var(--border); }
+  .ring-fill { stroke: var(--gold); stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1); }
+  .score-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .score-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .score-den { font-size: .8rem; color: var(--muted); }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 1rem;
+    margin: 1.5rem 0 2rem;
+  }
+  .result-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+  }
+  .rs-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .rs-num.green { color: var(--green); }
+  .rs-num.red   { color: var(--red); }
+  .rs-num.gold  { color: var(--gold); }
+  .rs-label { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-top: .2rem; }
+
+  .result-message {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-bottom: 2rem;
+    font-size: .95rem;
+    line-height: 1.6;
+    color: var(--text);
+    font-style: italic;
+  }
+
+  .btn-ghost {
+    display: inline-block;
+    padding: .7rem 1.6rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .85rem;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: .75rem;
+    transition: border-color .2s, color .2s;
+  }
+  .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+  @media (max-width: 480px) {
+    .card { padding: 1.5rem 1.25rem; }
+    .result-grid { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Decorative columns -->
+<div class="columns-bg">
+  <svg viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <g fill="white">
+      <rect x="60"  y="100" width="40" height="700" rx="4"/>
+      <rect x="60"  y="80"  width="50" height="30"  rx="3"/>
+      <rect x="130" y="100" width="40" height="700" rx="4"/>
+      <rect x="130" y="80"  width="50" height="30"  rx="3"/>
+      <rect x="1220" y="100" width="40" height="700" rx="4"/>
+      <rect x="1220" y="80"  width="50" height="30"  rx="3"/>
+      <rect x="1290" y="100" width="40" height="700" rx="4"/>
+      <rect x="1290" y="80"  width="50" height="30"  rx="3"/>
+    </g>
+  </svg>
+</div>
+
+<div class="container">
+
+  <!-- HOME SCREEN -->
+  <div id="screen-home" class="screen active">
+    <div class="home-header">
+      <div style="display:flex;justify-content:center">
+        <span class="badge"><span class="badge-dot"></span>Quiz Educativo</span>
+      </div>
+      <div class="laurel">⚖️</div>
+      <h1>Democracia<br><span>&amp; Sociedade</span></h1>
+      <p class="subtitle">Teste seus conhecimentos sobre história política, direitos humanos e cidadania.</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-num">15</div>
+        <div class="stat-label">Perguntas</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">20s</div>
+        <div class="stat-label">Por pergunta</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">5</div>
+        <div class="stat-label">Temas</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="startQuiz()">Iniciar o Quiz →</button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="screen-quiz" class="screen">
+    <div class="quiz-meta">
+      <div class="q-counter">Pergunta <strong id="q-num">1</strong> / 15</div>
+      <div class="timer-wrap">
+        <span class="timer-icon">⏱</span>
+        <span id="timer">20</span>s
+      </div>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+
+    <div class="card">
+      <div class="category-tag" id="q-category">Categoria</div>
+      <div class="question-text" id="q-text">Pergunta aqui</div>
+    </div>
+
+    <div class="options" id="options-container"></div>
+
+    <div class="feedback-box" id="feedback-box">
+      <div class="fb-title" id="fb-title"></div>
+      <div id="fb-text"></div>
+    </div>
+
+    <button class="btn-next" id="btn-next" onclick="nextQuestion()">Próxima →</button>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div id="screen-result" class="screen">
+    <div class="result-center">
+      <div class="trophy" id="trophy-emoji">🏛️</div>
+      <div class="result-title" id="result-title">Excelente!</div>
+      <div class="result-sub" id="result-sub">Você completou o quiz</div>
+
+      <div class="score-ring-wrap">
+        <div class="score-ring">
+          <svg viewBox="0 0 140 140" width="140" height="140">
+            <circle class="ring-bg"   cx="70" cy="70" r="60"/>
+            <circle class="ring-fill" id="ring-fill" cx="70" cy="70" r="60"
+              stroke-dasharray="377" stroke-dashoffset="377"/>
+          </svg>
+          <div class="score-inner">
+            <div class="score-num" id="score-num">0</div>
+            <div class="score-den" id="score-den">de 15</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-stat">
+          <div class="rs-num green" id="res-correct">0</div>
+          <div class="rs-label">Corretas</div>
+        </div>
+        <div class="result-stat">
+          <div class="rs-num red" id="res-wrong">0</div>
+          <div class="rs-label">Erradas</div>
+        </div>
+        <div class="result-stat">
+          <div class="rs-num gold" id="res-pct">0%</div>
+          <div class="rs-label">Acerto</div>
+        </div>
+      </div>
+
+      <div class="result-message" id="result-message"></div>
+
+      <button class="btn-primary" onclick="restartQuiz()">Jogar Novamente</button>
+      <br>
+      <button class="btn-ghost" onclick="goHome()">← Voltar ao Início</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    category: "Origens da Democracia",
+    text: "Em qual cidade-estado da Grécia Antiga surgiu a democracia, por volta do século V a.C.?",
+    options: ["Esparta", "Atenas", "Corinto", "Tebas"],
+    correct: 1,
+    explanation: "Atenas é considerada o berço da democracia. Sob Clístenes e depois Péricles, os cidadãos atenienses participavam diretamente das decisões políticas na Ágora."
+  },
+  {
+    category: "Direitos Fundamentais",
+    text: "A Declaração Universal dos Direitos Humanos foi adotada pela ONU em qual ano?",
+    options: ["1945", "1948", "1952", "1960"],
+    correct: 1,
+    explanation: "A DUDH foi adotada em 10 de dezembro de 1948 pela Assembleia Geral da ONU, três anos após o fim da Segunda Guerra Mundial, como resposta às atrocidades do conflito."
+  },
+  {
+    category: "Brasil Republicano",
+    text: "Em que ano foi promulgada a Constituição Federal do Brasil, conhecida como 'Constituição Cidadã'?",
+    options: ["1984", "1985", "1988", "1990"],
+    correct: 2,
+    explanation: "A Constituição de 1988 foi promulgada em 5 de outubro, após o período da ditadura militar. O deputado Ulysses Guimarães a chamou de 'Constituição Cidadã' por seu amplo rol de direitos."
+  },
+  {
+    category: "Pensamento Político",
+    text: "Quem escreveu 'O Contrato Social', obra fundamental para a teoria democrática moderna?",
+    options: ["John Locke", "Montesquieu", "Jean-Jacques Rousseau", "Voltaire"],
+    correct: 2,
+    explanation: "Jean-Jacques Rousseau publicou 'O Contrato Social' em 1762, defendendo que a soberania pertence ao povo e que a legitimidade do governo deriva da vontade geral."
+  },
+  {
+    category: "Movimentos Sociais",
+    text: "O Movimento pelos Direitos Civis nos EUA resultou na aprovação de qual lei histórica em 1964?",
+    options: ["Lei do Sufrágio Universal", "Lei dos Direitos Civis", "Emenda da Igualdade", "Lei Antidiscriminação"],
+    correct: 1,
+    explanation: "O Civil Rights Act de 1964, sancionado pelo presidente Lyndon B. Johnson, proibiu a discriminação por raça, cor, religião, sexo ou origem nacional. Foi resultado de décadas de luta, com destaque para Martin Luther King Jr."
+  },
+  {
+    category: "Sistemas de Governo",
+    text: "O sistema de 'freios e contrapesos' (checks and balances) tem como objetivo principal:",
+    options: [
+      "Aumentar o poder do executivo",
+      "Impedir a concentração de poder entre os três poderes",
+      "Fortalecer o poder judiciário",
+      "Reduzir a participação popular"
+    ],
+    correct: 1,
+    explanation: "O sistema de freios e contrapesos, inspirado em Montesquieu, garante que os poderes Executivo, Legislativo e Judiciário se limitem mutuamente, prevenindo abusos e garantindo a democracia."
+  },
+  {
+    category: "Brasil Republicano",
+    text: "Qual foi o primeiro presidente eleito por voto direto no Brasil após o regime militar?",
+    options: ["José Sarney", "Fernando Collor", "Itamar Franco", "Fernando Henrique Cardoso"],
+    correct: 1,
+    explanation: "Fernando Collor de Mello foi eleito em 1989, nas primeiras eleições diretas para presidente desde 1960. A campanha foi marcada pelo movimento 'Diretas Já!' que precedeu a redemocratização."
+  },
+  {
+    category: "Direitos Fundamentais",
+    text: "O princípio do 'habeas corpus' garante ao cidadão o direito de:",
+    options: [
+      "Votar em eleições gerais",
+      "Não ser preso ilegalmente e ser apresentado a um juiz",
+      "Ter acesso à educação pública",
+      "Contestar leis inconstitucionais"
+    ],
+    correct: 1,
+    explanation: "O habeas corpus (latim: 'que tenhas o corpo') é uma garantia processual que protege o indivíduo contra prisões ilegais ou arbitrárias, assegurando o direito à liberdade de locomoção."
+  },
+  {
+    category: "Pensamento Político",
+    text: "A separação dos poderes em Executivo, Legislativo e Judiciário foi teorizada por:",
+    options: ["Rousseau", "Hobbes", "Montesquieu", "Maquiavel"],
+    correct: 2,
+    explanation: "Montesquieu formulou a teoria da separação dos poderes em 'O Espírito das Leis' (1748). Essa doutrina tornou-se a base do Estado democrático moderno, sendo adotada pelas constituições do mundo todo."
+  },
+  {
+    category: "Origens da Democracia",
+    text: "A Magna Carta, assinada em 1215 na Inglaterra, limitou o poder do rei ao estabelecer que:",
+    options: [
+      "O povo poderia votar diretamente para o Parlamento",
+      "Nenhum homem livre seria preso sem julgamento",
+      "A Igreja teria poder sobre o Estado",
+      "O rei seria eleito pelos nobres"
+    ],
+    correct: 1,
+    explanation: "A Magna Carta de 1215 foi um dos primeiros documentos a limitar o poder monárquico, garantindo que homens livres não seriam detidos, aprisionados ou exilados sem julgamento justo, sendo um precursor do Estado de Direito."
+  },
+  {
+    category: "Movimentos Sociais",
+    text: "O 'Apartheid' na África do Sul foi um sistema de:",
+    options: [
+      "Redistribuição de terras",
+      "Separação racial institucionalizada pelo governo",
+      "Industrialização acelerada",
+      "Democratização gradual"
+    ],
+    correct: 1,
+    explanation: "O Apartheid (1948–1994) foi um regime de segregação racial institucional na África do Sul, que negava direitos fundamentais à maioria negra. Terminou com a luta de Nelson Mandela e as primeiras eleições multirraciais em 1994."
+  },
+  {
+    category: "Sistemas de Governo",
+    text: "Em uma democracia representativa, os cidadãos exercem o poder político principalmente através de:",
+    options: [
+      "Assembleias populares diretas diárias",
+      "Representantes eleitos periodicamente",
+      "Decisões tomadas por especialistas designados",
+      "Referendos obrigatórios mensais"
+    ],
+    correct: 1,
+    explanation: "Na democracia representativa, o modelo mais comum no mundo moderno, os cidadãos escolhem representantes por meio de eleições periódicas. Esses representantes tomam decisões em nome do povo nos parlamentos e executivos."
+  },
+  {
+    category: "Brasil Republicano",
+    text: "O voto feminino no Brasil foi conquistado em qual ano?",
+    options: ["1920", "1932", "1945", "1950"],
+    correct: 1,
+    explanation: "O voto feminino no Brasil foi conquistado em 1932, durante o governo de Getúlio Vargas, tornando o Brasil o terceiro país da América Latina a garantir esse direito. Bertha Lutz foi uma das principais líderes do movimento sufragista."
+  },
+  {
+    category: "Direitos Fundamentais",
+    text: "O Estatuto da Criança e do Adolescente (ECA) foi aprovado no Brasil em qual ano?",
+    options: ["1988", "1990", "1993", "1996"],
+    correct: 1,
+    explanation: "O ECA foi promulgado em 13 de julho de 1990 (Lei nº 8.069/90), reconhecendo crianças e adolescentes como sujeitos de direitos plenos, em linha com a Convenção da ONU sobre os Direitos da Criança de 1989."
+  },
+  {
+    category: "Pensamento Político",
+    text: "O conceito de 'cidadania' na democracia moderna implica:",
+    options: [
+      "Apenas o direito de votar nas eleições",
+      "Direitos e deveres políticos, civis e sociais perante o Estado",
+      "Somente obrigações fiscais com o governo",
+      "A participação exclusiva em partidos políticos"
+    ],
+    correct: 1,
+    explanation: "A cidadania plena, segundo T.H. Marshall, envolve três dimensões: direitos civis (liberdades individuais), políticos (participação no poder) e sociais (acesso a saúde, educação, etc.). Implica tanto direitos quanto deveres."
+  }
+];
+
+let currentQ = 0;
+let score = 0;
+let wrongAnswers = 0;
+let timerInterval = null;
+let timeLeft = 20;
+let answered = false;
+let shuffled = [];
+
+const letters = ['A', 'B', 'C', 'D'];
+
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - .5);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  const el = document.getElementById(id);
+  el.style.display = 'block';
+  // force reflow for animation
+  el.offsetHeight;
+  el.classList.add('active');
+}
+
+function startQuiz() {
+  currentQ = 0;
+  score = 0;
+  wrongAnswers = 0;
+  shuffled = shuffle(questions);
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  clearInterval(timerInterval);
+  timeLeft = 20;
+
+  const q = shuffled[currentQ];
+  document.getElementById('q-num').textContent = currentQ + 1;
+  document.getElementById('q-category').textContent = q.category;
+  document.getElementById('q-text').textContent = q.text;
+
+  const pct = (currentQ / shuffled.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  const timerEl = document.getElementById('timer');
+  timerEl.textContent = timeLeft;
+  timerEl.classList.remove('warn');
+
+  document.getElementById('feedback-box').className = 'feedback-box';
+  document.getElementById('btn-next').className = 'btn-next';
+
+  // Render options with shuffle
+  const container = document.getElementById('options-container');
+  container.innerHTML = '';
+
+  // Create shuffled index map
+  const indices = shuffle([0,1,2,3]);
+  q._indexMap = indices; // save for answer check
+
+  indices.forEach((origIdx, displayIdx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.dataset.orig = origIdx;
+    btn.innerHTML = `<span class="option-letter">${letters[displayIdx]}</span><span>${q.options[origIdx]}</span>`;
+    btn.addEventListener('click', () => selectAnswer(origIdx, q, btn));
+    container.appendChild(btn);
+  });
+
+  // Start timer
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    timerEl.textContent = timeLeft;
+    if (timeLeft <= 5) timerEl.classList.add('warn');
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      timeoutAnswer(q);
+    }
+  }, 1000);
+}
+
+function selectAnswer(origIdx, q, clickedBtn) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+
+  const isCorrect = origIdx === q.correct;
+  if (isCorrect) score++; else wrongAnswers++;
+
+  highlightButtons(q.correct, origIdx);
+  showFeedback(isCorrect, q.explanation);
+}
+
+function timeoutAnswer(q) {
+  if (answered) return;
+  answered = true;
+  wrongAnswers++;
+  highlightButtons(q.correct, -1);
+  showFeedback(false, '⏱ Tempo esgotado! ' + q.explanation);
+}
+
+function highlightButtons(correctOrig, selectedOrig) {
+  document.querySelectorAll('.option-btn').forEach(btn => {
+    const orig = parseInt(btn.dataset.orig);
+    btn.disabled = true;
+    if (orig === correctOrig) btn.classList.add('correct');
+    else if (orig === selectedOrig) btn.classList.add('wrong');
+  });
+}
+
+function showFeedback(isCorrect, explanation) {
+  const box = document.getElementById('feedback-box');
+  const title = document.getElementById('fb-title');
+  const text = document.getElementById('fb-text');
+
+  if (isCorrect) {
+    box.className = 'feedback-box correct-fb show';
+    title.innerHTML = '✅ Correto!';
+  } else {
+    box.className = 'feedback-box wrong-fb show';
+    title.innerHTML = '❌ Incorreto';
+  }
+  text.textContent = explanation;
+
+  const btn = document.getElementById('btn-next');
+  btn.className = 'btn-next show';
+  btn.textContent = currentQ < shuffled.length - 1 ? 'Próxima Pergunta →' : 'Ver Resultado →';
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ < shuffled.length) {
+    renderQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  clearInterval(timerInterval);
+  showScreen('screen-result');
+
+  const total = shuffled.length;
+  const pct = Math.round((score / total) * 100);
+
+  document.getElementById('score-num').textContent = score;
+  document.getElementById('score-den').textContent = 'de ' + total;
+  document.getElementById('res-correct').textContent = score;
+  document.getElementById('res-wrong').textContent = wrongAnswers;
+  document.getElementById('res-pct').textContent = pct + '%';
+
+  // Ring animation
+  const circumference = 377;
+  const offset = circumference - (circumference * score / total);
+  setTimeout(() => {
+    document.getElementById('ring-fill').style.strokeDashoffset = offset;
+  }, 200);
+
+  // Trophy & message
+  let trophy, title, sub, msg;
+  if (pct === 100) {
+    trophy = '🏆'; title = 'Perfeito!'; sub = 'Pontuação máxima alcançada!';
+    msg = '"A democracia é o pior sistema de governo, exceto todos os outros já experimentados." – Winston Churchill. Você conhece profundamente esse sistema!';
+  } else if (pct >= 80) {
+    trophy = '🌟'; title = 'Excelente!'; sub = 'Você é um cidadão muito bem informado!';
+    msg = '"A liberdade não é algo que alguém nos dá. É algo que tomamos." – A. J. Liebling. Continue aprofundando seus conhecimentos!';
+  } else if (pct >= 60) {
+    trophy = '⚖️'; title = 'Muito Bem!'; sub = 'Bom conhecimento sobre democracia e sociedade.';
+    msg = '"A ignorância do povo é a força dos tiranos." – Jean-Paul Marat. Você está no caminho certo, continue estudando!';
+  } else if (pct >= 40) {
+    trophy = '📜'; title = 'Continue Estudando'; sub = 'Você tem uma base, mas pode ir mais longe.';
+    msg = '"A educação é a arma mais poderosa que você pode usar para mudar o mundo." – Nelson Mandela. Aprofunde seus estudos sobre cidadania!';
+  } else {
+    trophy = '🌱'; title = 'Não Desista!'; sub = 'Cada erro é uma oportunidade de aprender.';
+    msg = '"Cidadania não é um espetáculo a que se assiste, mas uma responsabilidade que se assume." – Marilena Chauí. Revise os temas e tente novamente!';
+  }
+
+  document.getElementById('trophy-emoji').textContent = trophy;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-sub').textContent = sub;
+  document.getElementById('result-message').textContent = msg;
+}
+
+function restartQuiz() { startQuiz(); }
+function goHome()      { showScreen('screen-home'); }
+</script>
+</body>
+</html>
